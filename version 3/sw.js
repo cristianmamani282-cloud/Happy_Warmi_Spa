@@ -4,14 +4,15 @@
  * Soporte Offline integral, precaché de assets estáticos, mariposas y caché dinámico.
  */
 
-const CACHE_NAME = 'happy-warmi-spa-v2.1.0';
-const DYNAMIC_CACHE_NAME = 'happy-warmi-dynamic-v2.1.0';
+const CACHE_NAME = 'happy-warmi-spa-v2.2.0';
+const DYNAMIC_CACHE_NAME = 'happy-warmi-dynamic-v2.2.0';
 
 const STATIC_ASSETS = [
   './',
   './index.html',
   './style.css',
   './app.js',
+  './supabase-client.js',
   './admin.html',
   './manifest.json',
   './icons/favicon.svg',

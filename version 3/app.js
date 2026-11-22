@@ -68,37 +68,40 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================================================
   // 2. SISTEMA DE BITÁCORA DE EVENTOS (UPDS 2026)
   // ==========================================================================
+  // 2. SISTEMA DE BITÁCORA DE EVENTOS (SUPABASE + LOCALSTORAGE HÍBRIDO)
+  // ==========================================================================
   const logOutput = document.getElementById('logOutput');
 
-  function logEvent(tipo, mensaje) {
-    const hora = new Date().toLocaleTimeString();
-    const textoEntrada = `[${hora}] ${tipo}: ${mensaje}`;
-
-    // 1. Mostrar en panel DOM
-    if (logOutput) {
-      const item = document.createElement('div');
-      item.textContent = textoEntrada;
-      logOutput.prepend(item);
+  function logEvent(tipo, mensaje, detalles = null) {
+    // 1. Enviar a WarmiDB (registra en Supabase en la nube y en LocalStorage de respaldo)
+    if (window.WarmiDB && typeof window.WarmiDB.logEvent === 'function') {
+      window.WarmiDB.logEvent(tipo, mensaje, 'cliente', detalles);
+    } else {
+      const hora = new Date().toLocaleTimeString();
+      try {
+        const bitacora = JSON.parse(localStorage.getItem(STORAGE_KEY_BITACORA) || '[]');
+        bitacora.unshift({
+          hora,
+          tipo,
+          mensaje,
+          usuario_tipo: 'cliente',
+          timestamp: new Date().toISOString()
+        });
+        if (bitacora.length > 200) bitacora.length = 200;
+        localStorage.setItem(STORAGE_KEY_BITACORA, JSON.stringify(bitacora));
+      } catch (e) {}
     }
 
-    // 2. Persistir en localStorage para el panel de administración
-    try {
-      const bitacora = JSON.parse(localStorage.getItem(STORAGE_KEY_BITACORA) || '[]');
-      bitacora.unshift({
-        hora,
-        tipo,
-        mensaje,
-        timestamp: new Date().toISOString()
-      });
-      // Mantener los últimos 150 eventos
-      if (bitacora.length > 150) bitacora.length = 150;
-      localStorage.setItem(STORAGE_KEY_BITACORA, JSON.stringify(bitacora));
-    } catch (e) {
-      // Manejo silencioso de cuotas
+    // 2. Si existe elemento logOutput (para compatibilidad)
+    if (logOutput) {
+      const hora = new Date().toLocaleTimeString();
+      const item = document.createElement('div');
+      item.textContent = `[${hora}] ${tipo}: ${mensaje}`;
+      logOutput.prepend(item);
     }
   }
 
-  // Cargar bitácora persistida al inicio
+  // Cargar bitácora si existe panel en el DOM
   function loadInitialBitacora() {
     if (!logOutput) return;
     try {
@@ -116,11 +119,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   loadInitialBitacora();
 
-  // Limpiar Bitácora
+  // Limpiar Bitácora si existe botón
   const btnClearClientBitacora = document.getElementById('btnClearClientBitacoraBtn');
   if (btnClearClientBitacora) {
     btnClearClientBitacora.addEventListener('click', () => {
-      localStorage.setItem(STORAGE_KEY_BITACORA, JSON.stringify([]));
+      if (window.WarmiDB && typeof window.WarmiDB.clearBitacora === 'function') {
+        window.WarmiDB.clearBitacora();
+      } else {
+        localStorage.setItem(STORAGE_KEY_BITACORA, JSON.stringify([]));
+      }
       if (logOutput) {
         logOutput.innerHTML = '<div>[Bitácora vaciada] Escuchando nuevas interacciones...</div>';
       }
@@ -134,6 +141,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================================================
   const liveContainer = document.getElementById('liveSpaContainer');
   const chatInput = document.getElementById('chatInput');
+  const btnSendChat = document.getElementById('btnSendChat');
+  const liveChatFeed = document.getElementById('liveChatFeed');
 
   if (liveContainer) {
     // 1. Delegación de eventos de ratón (click)
@@ -165,19 +174,52 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // 3. Captura de eventos de teclado en el chat (keyup en tiempo real)
+  // 3. Envío de mensajes en el chat de la comunidad
+  function handleSendChatMessage() {
+    if (!chatInput) return;
+    const msg = chatInput.value.trim();
+    if (!msg) return;
+
+    logEvent('CHAT_MENSAJE_ENVIADO', `Mensaje enviado al chat: "${msg}"`);
+    showToast('Mensaje enviado al chat del live');
+
+    if (liveChatFeed) {
+      const bubble = document.createElement('div');
+      bubble.style.padding = '0.3rem 0.5rem';
+      bubble.style.background = 'rgba(255,255,255,0.06)';
+      bubble.style.borderRadius = '6px';
+      bubble.innerHTML = `<strong>Tú:</strong> ${msg}`;
+      liveChatFeed.appendChild(bubble);
+      liveChatFeed.scrollTop = liveChatFeed.scrollHeight;
+
+      // Respuesta cálida de terapeutas
+      setTimeout(() => {
+        const therapistNames = ['Maya (Masajes)', 'Rosa (Faciales)', 'Moy (Rituales)'];
+        const randomTherapist = therapistNames[Math.floor(Math.random() * therapistNames.length)];
+        const reply = document.createElement('div');
+        reply.style.padding = '0.3rem 0.5rem';
+        reply.style.background = 'rgba(90, 73, 120, 0.2)';
+        reply.style.borderRadius = '6px';
+        reply.style.color = '#E9D5FF';
+        reply.innerHTML = `🌿 <strong>${randomTherapist}:</strong> ¡Gracias por escribirnos! Estaremos encantadas de recibirte.`;
+        liveChatFeed.appendChild(reply);
+        liveChatFeed.scrollTop = liveChatFeed.scrollHeight;
+      }, 1200);
+    }
+
+    chatInput.value = '';
+  }
+
   if (chatInput) {
     chatInput.addEventListener('keyup', (e) => {
       if (e.key === 'Enter') {
-        if (chatInput.value.trim().length > 0) {
-          logEvent('CHAT_MENSAJE_ENVIADO', `Mensaje enviado al chat: "${chatInput.value.trim()}"`);
-          showToast('Mensaje enviado al chat del live');
-          chatInput.value = '';
-        }
-      } else {
-        logEvent('CHAT_INPUT', `Tecleando en el chat: "${e.target.value}"`);
+        handleSendChatMessage();
       }
     });
+  }
+
+  if (btnSendChat) {
+    btnSendChat.addEventListener('click', handleSendChatMessage);
   }
 
   // Animación visual de corazón flotante al interactuar
@@ -726,6 +768,11 @@ document.addEventListener('DOMContentLoaded', () => {
       stored.unshift(newReservation);
       saveStoredReservations(stored);
 
+      // Sincronizar en Supabase si está disponible
+      if (window.WarmiDB && typeof window.WarmiDB.saveReservation === 'function') {
+        window.WarmiDB.saveReservation(newReservation);
+      }
+
       // Registrar en la Bitácora de Eventos
       logEvent('RESERVA_CONFIRMADA', `Cita ${bookingCode} confirmada para ${clientName} (${bookingState.personCount} personas) con ${bookingState.specialist.name} a las ${bookingState.timeSlot} hrs`);
 
@@ -909,6 +956,11 @@ document.addEventListener('DOMContentLoaded', () => {
         target.cancelledAt = new Date().toISOString();
 
         saveStoredReservations(list);
+
+        // Actualizar en Supabase si está disponible
+        if (window.WarmiDB && typeof window.WarmiDB.updateReservationStatus === 'function') {
+          window.WarmiDB.updateReservationStatus(target.code, 'Cancelada', reason);
+        }
 
         // Registrar en la Bitácora de Eventos
         logEvent('RESERVA_CANCELADA', `Cita ${target.code} (${target.clientName}) cancelada por el cliente. Motivo: "${reason}"`);
@@ -1095,6 +1147,70 @@ document.addEventListener('DOMContentLoaded', () => {
     pwaGuideCloseBtn.addEventListener('click', () => {
       const guideModal = document.getElementById('pwaGuideModal');
       if (guideModal) guideModal.classList.remove('active');
+    });
+  }
+
+  // ==========================================================================
+  // 14. MODAL DE ACCESO ADMINISTRATIVO (DIVISIÓN ADMIN / CLIENTE)
+  // ==========================================================================
+  const openAdminAuthModalBtn = document.getElementById('openAdminAuthModalBtn');
+  const adminAuthModal = document.getElementById('adminAuthModal');
+  const closeAdminAuthModalBtn = document.getElementById('closeAdminAuthModalBtn');
+  const cancelAdminAuthBtn = document.getElementById('cancelAdminAuthBtn');
+  const adminAuthForm = document.getElementById('adminAuthForm');
+  const adminPinInput = document.getElementById('adminPinInput');
+  const adminAuthError = document.getElementById('adminAuthError');
+
+  const ADMIN_PIN_DEFAULT = 'admin123';
+
+  function openAdminModal() {
+    if (adminAuthModal) {
+      if (adminPinInput) adminPinInput.value = '';
+      if (adminAuthError) adminAuthError.style.display = 'none';
+      adminAuthModal.classList.add('active');
+      setTimeout(() => {
+        if (adminPinInput) adminPinInput.focus();
+      }, 150);
+    }
+  }
+
+  function closeAdminModal() {
+    if (adminAuthModal) adminAuthModal.classList.remove('active');
+  }
+
+  if (openAdminAuthModalBtn) {
+    openAdminAuthModalBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (sessionStorage.getItem('happy_warmi_admin_auth') === 'true') {
+        window.location.href = './admin.html';
+      } else {
+        openAdminModal();
+      }
+    });
+  }
+
+  if (closeAdminAuthModalBtn) closeAdminAuthModalBtn.addEventListener('click', closeAdminModal);
+  if (cancelAdminAuthBtn) cancelAdminAuthBtn.addEventListener('click', closeAdminModal);
+
+  if (adminAuthForm) {
+    adminAuthForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const enteredPin = (adminPinInput ? adminPinInput.value : '').trim();
+      if (enteredPin === ADMIN_PIN_DEFAULT) {
+        sessionStorage.setItem('happy_warmi_admin_auth', 'true');
+        logEvent('ADMIN_LOGIN', 'Inicio de sesión administrativo exitoso');
+        showToast('Acceso concedido al Panel de Administrador');
+        closeAdminModal();
+        setTimeout(() => {
+          window.location.href = './admin.html';
+        }, 250);
+      } else {
+        if (adminAuthError) adminAuthError.style.display = 'block';
+        if (adminPinInput) {
+          adminPinInput.value = '';
+          adminPinInput.focus();
+        }
+      }
     });
   }
 });

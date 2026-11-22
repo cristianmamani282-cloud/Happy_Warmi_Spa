@@ -100,16 +100,10 @@
             <span>📋 Mis Citas</span>
           </button>
 
-          <!-- Botón rápido de Bitácora -->
-          <button class="bitacora-quick-toggle view-trigger-btn" data-target-view="cosas-spa" title="Ir al panel de auditoría de eventos en vivo">
-            <span class="bitacora-status-beacon"></span>
-            <span>Bitácora Live</span>
+          <!-- Acceso Exclusivo al Panel de Administración (con PIN de seguridad) -->
+          <button class="btn-pill" id="openAdminAuthModalBtn" style="background: rgba(90, 73, 120, 0.08); color: var(--primary-purple); font-size: 0.78rem; padding: 0.45rem 0.85rem;" title="Acceso al Panel de Control y Bitácora para el Administrador">
+            <span>🔒 Admin</span>
           </button>
-
-          <!-- Acceso al Panel de Administración -->
-          <a href="./admin.html" class="btn-pill" style="background: rgba(90, 73, 120, 0.08); color: var(--primary-purple); font-size: 0.78rem; padding: 0.45rem 0.85rem;" title="Panel de Administración y Control">
-            <span>⚙️ Admin</span>
-          </a>
 
           <button class="btn-pill btn-primary view-trigger-btn" data-target-view="reserva">
             <span>Reservar</span>
@@ -572,29 +566,30 @@
           </div>
 
           <!-- ================================================================
-               SECCIÓN ESPECÍFICA DE LA BITÁCORA DE EVENTOS (UPDS 2026 - CRITERIO 1)
-               Implementa Event Bubbling & Delegación en #liveSpaContainer
+               SECCIÓN LIVE & COMUNIDAD DE HAPPY WARMI SPA
+               Interacciones y ofertas en vivo (los eventos se registran en Supabase)
                ================================================================ -->
           <div style="margin-top: 1.8rem;">
-            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.8rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.8rem; margin-bottom: 0.8rem;">
               <div>
                 <h3 style="color: var(--primary-purple); font-size: 1.25rem;">
-                  🔴 Bitácora de Eventos en Tiempo Real (UPDS 2026)
+                  ✨ Transmisión en Vivo & Ofertas Relámpago
                 </h3>
                 <p style="font-size: 0.8rem; color: var(--text-secondary);">
-                  Auditoría interactiva DOM/BOM con delegación de eventos, ofertas en vivo, likes (click/dblclick) y chat en tiempo real.
+                  Conéctate con Maya, Rosa y Moy. Aprovecha descuentos flash, envía consultas en directo y comparte amor holístico.
                 </p>
               </div>
-              <button class="btn-pill btn-secondary" id="btnClearClientBitacoraBtn" style="font-size: 0.75rem; padding: 0.4rem 0.8rem;">
-                <span>Limpiar Registros</span>
-              </button>
+              <span style="font-size: 0.76rem; background: rgba(34, 197, 94, 0.15); color: #15803D; padding: 0.35rem 0.75rem; border-radius: 999px; font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem;">
+                <span style="width: 8px; height: 8px; background: #22C55E; border-radius: 50%; display: inline-block;"></span>
+                En Directo con el Equipo
+              </span>
             </div>
 
-            <!-- Contenedor con Delegación de Eventos (#liveContainer del PDF adaptado a Happy Warmi) -->
+            <!-- Contenedor con Delegación de Eventos -->
             <div id="liveSpaContainer" class="stream-box">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem; flex-wrap:wrap; gap:0.5rem;">
                 <p style="font-weight:700; font-size:0.85rem; color:#F8FAFC;">
-                  🔴 EN VIVO: Transmisión y Ofertas Relámpago Happy Warmi Spa
+                  🔴 SALA EN VIVO: Aromaterapia y Cuidado Zen
                 </p>
                 <span style="font-size:0.75rem; color:#94A3B8; background:rgba(255,255,255,0.08); padding:0.2rem 0.6rem; border-radius:12px;">
                   Terapeutas en Directo: Maya, Rosa & Moy
@@ -613,25 +608,32 @@
                   🧘 Ritual Zen Dúo
                 </button>
                 <button class="btn-oferta btn-like" data-action="like" title="Haz clic o doble clic para enviar corazones">
-                  ❤️ Dar Like al Live
+                  ❤️ Enviar Like al Live
                 </button>
               </div>
 
-              <!-- Chat en tiempo real (keyup listener) -->
+              <!-- Chat en tiempo real -->
               <div style="margin-top: 0.6rem;">
                 <label for="chatInput" style="display:block; font-size:0.78rem; font-weight:600; color:#E2E8F0; margin-bottom:0.3rem;">
-                  💬 Chat del Live (Escribe una consulta a las terapeutas en tiempo real):
+                  💬 Chat del Live (Haz tu pregunta y presiona Enter):
                 </label>
-                <input type="text" id="chatInput" placeholder="Pregunta a Maya, Rosa o Moy en directo..." 
-                       style="padding:10px 12px; width:100%; border-radius:6px; border:1px solid rgba(255,255,255,0.2); background:#0F172A; color:#FFFFFF; font-family:inherit; font-size:0.85rem; outline:none;">
+                <div style="display: flex; gap: 0.5rem;">
+                  <input type="text" id="chatInput" placeholder="Pregunta a Maya, Rosa o Moy en directo..." 
+                         style="padding:10px 12px; flex: 1; border-radius:6px; border:1px solid rgba(255,255,255,0.2); background:#0F172A; color:#FFFFFF; font-family:inherit; font-size:0.85rem; outline:none;">
+                  <button type="button" id="btnSendChat" class="btn-pill btn-primary" style="padding: 0 1rem; font-size: 0.8rem;">
+                    Enviar
+                  </button>
+                </div>
               </div>
 
-              <!-- Salida de la Bitácora (logOutput con prepend) -->
-              <h3 style="margin-top: 1rem; font-size: 0.92rem; color: #38BDF8;">
-                📊 Bitácora del Stream y Auditoría de Acciones
-              </h3>
-              <div id="logOutput" class="log-stream">
-                <div>[Transmisión iniciada] Happy Warmi Spa escuchando interacciones y eventos del DOM...</div>
+              <!-- Feed comunitario de mensajes -->
+              <div style="margin-top: 1rem;">
+                <h4 style="font-size: 0.82rem; color: #94A3B8; margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                  Mensajes de la Comunidad en Vivo:
+                </h4>
+                <div id="liveChatFeed" style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; padding: 0.8rem; max-height: 140px; overflow-y: auto; font-size: 0.8rem; display: flex; flex-direction: column; gap: 0.4rem;">
+                  <div style="color: #94A3B8;">🌸 <em>Maya: "¡Bienvenidos al espacio de bienestar de Happy Warmi! ¿En qué podemos consentirte hoy?"</em></div>
+                </div>
               </div>
             </div>
           </div>
@@ -989,6 +991,36 @@
     </div>
   </div>
 
+  <!-- MODAL DE ACCESO ADMINISTRATIVO (DIVISIÓN ADMIN / USUARIO NORMAL) -->
+  <div class="modal-overlay" id="adminAuthModal">
+    <div class="modal-box" style="max-width: 420px; text-align: center;">
+      <button class="modal-close-btn" id="closeAdminAuthModalBtn">✕</button>
+      <div style="font-size: 2.5rem; margin-bottom: 0.6rem;">🔒</div>
+      <h3 class="modal-title" style="color: var(--primary-purple); font-size: 1.35rem; margin-bottom: 0.4rem;">Acceso Administrativo</h3>
+      <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 1.2rem; line-height: 1.5;">
+        Este panel está reservado para la supervisión del spa, gestión de reservas y la bitácora de auditoría.
+      </p>
+
+      <form id="adminAuthForm">
+        <div class="form-group" style="text-align: left; margin-bottom: 1rem;">
+          <label class="form-label" for="adminPinInput">PIN / Contraseña de Administrador:</label>
+          <input type="password" id="adminPinInput" class="form-input" placeholder="Ingresa PIN..." required autocomplete="current-password" style="text-align: center; letter-spacing: 0.25em; font-size: 1.15rem;">
+          <div id="adminAuthError" style="display: none; color: #DC2626; font-size: 0.8rem; margin-top: 0.5rem; text-align: center; font-weight: 600;">
+            ⚠️ PIN incorrecto. Inténtalo de nuevo.
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 0.6rem; margin-top: 1.2rem;">
+          <button type="button" class="btn-pill btn-secondary" id="cancelAdminAuthBtn" style="flex: 1;">Cancelar</button>
+          <button type="submit" class="btn-pill btn-primary" style="flex: 1;">Entrar al Panel</button>
+        </div>
+        <p style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.8rem;">
+          PIN por defecto: <code>admin123</code>
+        </p>
+      </form>
+    </div>
+  </div>
+
   <!-- TOAST NOTIFICACIÓN -->
   <div class="toast-notification" id="toastNotification">
     <svg class="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -998,7 +1030,9 @@
     <span id="toastMessage">Acción completada</span>
   </div>
 
-  <!-- Scripts -->
+  <!-- Scripts: Supabase UMD, Conector WarmiDB y App Principal -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-client.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
